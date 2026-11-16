@@ -12,11 +12,20 @@ import subprocess
 import json
 from pathlib import Path
 
+from agents.base_agent import BaseAgent
 
-class SecurityScanAgent:
+
+class SecurityScanAgent(BaseAgent):
     """Wraps Checkov and Trivy CLI tools to produce SecurityFinding records."""
 
+    agent_role = "security"
     TERRAFORM_DIR = Path("infrastructure/terraform/simulated")
+
+    def __init__(self, agent_id: str = "agent-security-001", name: str = "security-agent", db_session=None, governance_agent=None):
+        super().__init__(agent_id=agent_id, name=name, db_session=db_session, governance_agent=governance_agent)
+
+    async def _execute(self, **kwargs) -> list[dict]:
+        return await self.scan_all()
 
     def __init__(self, db_session=None):
         self.db = db_session

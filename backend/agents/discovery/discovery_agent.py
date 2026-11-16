@@ -10,12 +10,25 @@ Responsibilities:
 from __future__ import annotations
 from typing import Any
 
+from agents.base_agent import BaseAgent
 
-class InfrastructureDiscoveryAgent:
+
+class InfrastructureDiscoveryAgent(BaseAgent):
     """Discovers and inventories simulated cloud resources."""
 
-    def __init__(self, db_session=None):
-        self.db = db_session
+    agent_role = "discovery"
+
+    def __init__(
+        self,
+        agent_id: str = "agent-discovery-001",
+        name: str = "discovery-agent",
+        db_session=None,
+        governance_agent=None,
+    ):
+        super().__init__(agent_id=agent_id, name=name, db_session=db_session, governance_agent=governance_agent)
+
+    async def _execute(self, **kwargs) -> Any:
+        return await self.discover()
 
     async def discover(self) -> list[dict[str, Any]]:
         """

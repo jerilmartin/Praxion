@@ -44,7 +44,26 @@ agent governance and controlled remediation.
 
 ## Changelog
 
-### 2026-11-16 — Initial Skeletal Structure
+### 2026-11-16 — Useful Additions (Session 2)
+
+**What was done:**
+- **29 `__init__.py` files** created across all Python packages — the project was unimportable without them
+- **`alembic.ini`** (`backend/`) — required for `alembic upgrade head` to find the migration env
+- **`pyproject.toml`** (project root) — unified config for pytest (asyncio-auto, coverage), black, ruff, mypy; replaces scattered `.cfg` files
+- **`app/api/v1/endpoints/health.py`** — `GET /health` liveness probe + `GET /` root; wired into `application.py`
+- **`app/core/deps.py`** — reusable FastAPI `Depends()` helpers: `DBSession`, `Pagination` (skip/limit), `CurrentUserId` (JWT decode)
+- **`app/core/exceptions.py`** — domain exception hierarchy (`NotFoundError`, `ForbiddenError`, `PolicyViolationError`, `ConflictError`) + FastAPI handlers registered in app factory
+- **`app/schemas/common.py`** — shared Pydantic envelopes: `PaginatedResponse[T]`, `MessageResponse`, `ErrorResponse`, `IDResponse`
+- **`app/db/repository.py`** — generic async `BaseRepository[ModelT]` with `get`, `get_or_404`, `list`, `create`, `update`, `delete`
+- **`agents/base_agent.py`** — abstract `BaseAgent` with built-in OPA authorization gate, timing, structured logging, and activity-log hook; `InfrastructureDiscoveryAgent` and `SecurityScanAgent` now inherit from it
+- **`scripts/seed_db.py`** — runnable seed script: 1 admin user, 3 agents, 5 infra resources, 3 findings, 1 policy
+
+**Files modified:**
+- `app/core/application.py` — registers `health_router` and `register_exception_handlers`
+- `agents/discovery/discovery_agent.py` — inherits `BaseAgent`
+- `agents/security/security_agent.py` — inherits `BaseAgent`
+
+### 2026-11-16 — Initial Skeletal Structure (Session 1)
 
 **What was done:**
 - Created full directory tree (32 directories)
