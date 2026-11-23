@@ -89,10 +89,10 @@ class BaseAgent(abc.ABC):
     # ── Helpers ───────────────────────────────────────────────────────────────
 
     async def _check_authorization(self, operation: str, resource: str) -> bool:
-        """Delegate to governance agent if wired; default allow during development."""
+        """Only run an agent operation when governance approves it."""
         if self.governance is None:
-            self._logger.debug("No governance agent wired – defaulting to ALLOW")
-            return True
+            self._logger.warning("No governance agent wired – denying '%s'", operation)
+            return False
         return await self.governance.authorize(self.agent_id, operation, resource)
 
     async def _log_activity(
