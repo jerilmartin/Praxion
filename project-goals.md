@@ -1,4 +1,6 @@
-# Praxion – Project Goals & Progress
+# Praxion: Autonomous Cloud Infrastructure Security, Agent Governance and Remediation
+
+## Project Goals & Progress
 
 > **Update policy**: This file must be updated after every significant code change.
 > Record what was done, what objective it satisfies, and what remains.
@@ -7,8 +9,63 @@
 
 ## Project Overview
 
-**Praxion** is a local-first, multi-agent AI platform for autonomous cloud infrastructure security,
-agent governance and controlled remediation.
+**Domain:** Agentic AI, cloud infrastructure security, machine learning and DevSecOps.
+
+**Praxion** is a local-first, AI-powered platform that uses coordinated agents to investigate
+cloud infrastructure security risks, assess their impact and propose or carry out controlled
+remediation. It combines infrastructure security with governance of the agents that perform
+security operations, so their actions are authorized, observable, explainable and accountable.
+
+### Updated Project Goal
+
+Develop a security-governed platform that demonstrates how AI agents can investigate and respond
+to cloud infrastructure security issues without receiving unrestricted control over the
+infrastructure they manage. The project addresses two linked questions:
+
+1. How can AI agents autonomously investigate and respond to infrastructure security issues?
+2. How can the system prevent unauthorized agent actions and detect unexpected or potentially
+   unsafe agent behaviour?
+
+The LLM may propose an action, but an external deterministic authorization layer decides whether
+the action is permitted. High-impact changes require human approval, are executed through a
+controlled layer, and are verified and recorded.
+
+### Project Description
+
+Praxion works against a simulated cloud environment containing resources such as virtual
+machines, storage services, networks and IAM policies. Checkov and Trivy identify vulnerabilities
+and misconfigurations. Specialized agents investigate findings, use a NetworkX dependency graph
+to assess relationships and possible attack paths, and develop remediation plans.
+
+Open Policy Agent (OPA) evaluates sensitive tool calls against policy before execution. Machine
+learning based behavioural monitoring (Isolation Forest) identifies unusual activity and can raise
+alerts or trigger additional safeguards; it does not grant or revoke permissions. For high-impact
+remediation, the system requests human approval, executes approved changes through a controlled
+layer, verifies the outcome and records an audit trail. A centralized dashboard is intended to
+show infrastructure risks, agent decisions, authorization outcomes, anomalies and remediation
+history.
+
+### Research Focus and Contribution
+
+The central contribution is the integration of infrastructure security automation with security
+governance of the agents performing it. The project does not claim to invent vulnerability
+scanning, attack-path analysis, AI remediation or anomaly detection individually. Its contribution
+is an engineering and research demonstration of how these capabilities can work together under
+external authorization, behavioural monitoring, adversarial evaluation and accountable remediation.
+
+The work is organized around three pillars:
+
+1. **Intelligent infrastructure security:** discovery, scanning, dependency graphs, risk
+   investigation and remediation planning.
+2. **AI agent security and governance:** least-privilege tool access, OPA authorization,
+   behavioural anomaly detection and adversarial agent testing.
+3. **Controlled autonomous remediation:** human approval, safe execution, post-change
+   verification and auditability.
+
+Graph analysis provides resource relationships and potential impact; it is not itself AI. OPA
+enforces individual operation permissions, while behavioural monitoring looks for patterns across
+agent activity. These controls complement each other, and the ML model never replaces OPA's
+authorization decision.
 
 ---
 
@@ -19,10 +76,10 @@ agent governance and controlled remediation.
 | OBJ-1 | Simulated cloud infrastructure environment | 🟡 Skeleton | `infrastructure/terraform/simulated/main.tf` created with intentional misconfigs |
 | OBJ-2 | Specialized AI agents (discovery, scan, remediation) | 🟡 Skeleton | Agent classes stubbed; `NotImplementedError` on all methods |
 | OBJ-3 | Infrastructure dependency graph + attack paths | 🟡 Skeleton | `InfrastructureGraph` class built with NetworkX; pending DB integration |
-| OBJ-4 | Agent identity management + OPA authorization | 🟡 Skeleton | `GovernanceAgent` + `OPAPolicyClient` stubbed; Rego policy written |
-| OBJ-5 | Attack simulation + ML anomaly detection | 🟡 Skeleton | `AttackSimulator` + `AnomalyDetectionAgent` stubbed; training script ready |
+| OBJ-4 | Agent identity, least-privilege permissions + OPA authorization | 🟡 Skeleton | `GovernanceAgent` + `OPAPolicyClient` stubbed; Rego policy written; authorization is the deterministic enforcement layer |
+| OBJ-5 | Adversarial agent testing + ML behavioural anomaly detection | 🟡 Skeleton | `AttackSimulator` + `AnomalyDetectionAgent` stubbed; training script ready; ML flags unusual patterns but does not authorize actions |
 | OBJ-6 | Centralized observability / dashboard | 🟡 Skeleton | OpenTelemetry helpers stubbed; frontend pages not yet created |
-| OBJ-7 | Controlled remediation with human approval | 🟡 Skeleton | Approval + Remediation models and endpoints stubbed |
+| OBJ-7 | Controlled remediation with human approval, execution verification and auditability | 🟡 Skeleton | Approval + Remediation models and endpoints stubbed |
 
 ---
 
@@ -39,10 +96,23 @@ agent governance and controlled remediation.
 | FR-07 | ML-based anomaly detection | 🟡 Agent stubbed; training script complete |
 | FR-08 | Human approval/rejection workflow | 🟡 Model + endpoints stubbed |
 | FR-09 | Activity logs and execution results | 🟡 Model + endpoint stubbed; OTEL helpers ready |
+| FR-10 | Detect and record adversarial attempts against agents (including unauthorized access, privilege escalation, prompt injection, excessive tool use and cross-agent misuse) | 🟡 Simulator + endpoint stubbed; 4 scenarios defined |
+| FR-11 | Require approval for sensitive remediation, execute approved changes through a controlled layer, and verify outcomes | 🟡 Approval + Remediation models and endpoints stubbed |
+| FR-12 | Evaluate end-to-end effectiveness: blocked unauthorized actions, detected anomalies, graph-based impact assessment, approval enforcement and successful remediation verification | 🔴 Evaluation criteria defined; measurement and experiments pending |
 
 ---
 
 ## Changelog
+
+### 2026-11-23 — Updated Project Goal and Research Focus
+
+**What was done:**
+- Reframed Praxion around the combined problem of infrastructure security and governance of the AI agents performing security operations.
+- Documented the three research pillars: intelligent infrastructure security, agent security and governance, and controlled autonomous remediation.
+- Clarified the distinct roles of OPA authorization, ML behavioural monitoring, graph analysis, human approval, controlled execution and post-remediation verification.
+- Added functional requirements for adversarial agent testing, controlled verified remediation and measurable evaluation.
+
+**Objective satisfied:** Aligns the project goals and requirements with the updated project description and makes the intended contribution and evaluation focus explicit.
 
 ### 2026-11-16 — Useful Additions (Session 2)
 
