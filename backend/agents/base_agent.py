@@ -71,12 +71,16 @@ class BaseAgent(abc.ABC):
             self._logger.info(
                 "Agent '%s' completed '%s' in %.1fms", self.name, operation, elapsed_ms
             )
-            await self._log_activity(operation, kwargs, result, elapsed_ms, error=None)
+            await self._log_activity(
+                operation, {"resource": resource, **kwargs}, result, elapsed_ms, error=None
+            )
             return result
         except Exception as exc:
             elapsed_ms = (time.monotonic() - start) * 1000
             self._logger.error("Agent '%s' failed '%s': %s", self.name, operation, exc)
-            await self._log_activity(operation, kwargs, {}, elapsed_ms, error=str(exc))
+            await self._log_activity(
+                operation, {"resource": resource, **kwargs}, {}, elapsed_ms, error=str(exc)
+            )
             raise
 
     # ── Abstract method – subclasses implement this ───────────────────────────
@@ -103,11 +107,23 @@ class BaseAgent(abc.ABC):
         elapsed_ms: float,
         error: Optional[str],
     ) -> None:
-        """Persist an ActivityLog record. No-ops if DB is not wired."""
+        """Add an activity record to the current database transaction."""
         if self.db is None:
             return
-        # TODO: insert ActivityLog record
-        pass
+
+        from app.models.policy import ActivityLog
+
+        record = ActivityLog(
+            agent_id=self.agent_id,
+            action=action,
+            input_data=input_data,
+            output_data=output_data if isinstance(output_data, dict) else {"result": output_data},
+            authorized=True,
+            execution_time_ms=elapsed_ms,
+            error=error,
+        )
+        self.db.add(record)
+        await self.db.flush()
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} id={self.agent_id!r} name={self.name!r}>"
