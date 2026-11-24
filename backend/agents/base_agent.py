@@ -21,7 +21,9 @@ class BaseAgent(abc.ABC):
     Abstract base class all Praxion agents must extend.
 
     Subclasses implement:
-        async def _execute(self, **kwargs) -> Any
+        async def _execute(
+            self, operation: str, resource: str, **kwargs
+        ) -> Any
 
     Callers use:
         result = await agent.run(**kwargs)
@@ -86,7 +88,7 @@ class BaseAgent(abc.ABC):
     # ── Abstract method – subclasses implement this ───────────────────────────
 
     @abc.abstractmethod
-    async def _execute(self, **kwargs) -> Any:
+    async def _execute(self, operation: str, resource: str, **kwargs) -> Any:
         """Core agent logic. Called only after authorization succeeds."""
         ...
 
