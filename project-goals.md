@@ -113,6 +113,15 @@ authorization decision.
 
 **Remaining:** Activity-log transaction behavior and authorization-decision logging are for iteration 2.
 
+### 2026-11-25 — BaseAgent Iteration 2
+
+**What was done:**
+- Record denied and failed authorization checks as unauthorized activity entries.
+- Record allowed executions as authorized, including execution failures.
+- Keep activity writes in the caller-owned transaction and prevent logging errors from changing the agent result.
+
+**Remaining:** Verify database commit/rollback behavior with an integration test and wire callers to commit activity records.
+
 ### 2026-11-23 — Updated Project Goal and Research Focus
 
 **What was done:**

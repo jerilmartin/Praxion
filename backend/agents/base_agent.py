@@ -1,8 +1,7 @@
 """
 Abstract base class for all Praxion agents.
 
-Every agent (discovery, security, governance, remediation, anomaly) inherits
-from BaseAgent, gaining:
+Agent subclasses inherit from BaseAgent to get:
   - a shared asynchronous execution path
   - an authorization check before execution
   - run-time metadata (name, role, agent_id)
@@ -54,20 +53,36 @@ class BaseAgent(abc.ABC):
             resource:  Target resource identifier
             **kwargs:  Passed through to _execute()
         """
+        from app.core.exceptions import PolicyViolationError
+
+        input_data = {"resource": resource, **kwargs}
+
         # 1. Authorization gate
         try:
             allowed = await self._check_authorization(operation, resource)
         except Exception as exc:
-            from app.core.exceptions import PolicyViolationError
-
             self._logger.exception("Authorization check failed for '%s'", operation)
+            await self._record_activity(
+                operation,
+                input_data,
+                {},
+                elapsed_ms=None,
+                error=f"Authorization check failed: {exc}",
+                authorized=False,
+            )
             raise PolicyViolationError(
                 f"Could not authorize '{operation}' for agent '{self.name}'"
             ) from exc
 
         if not allowed:
-            from app.core.exceptions import PolicyViolationError
-
+            await self._record_activity(
+                operation,
+                input_data,
+                {},
+                elapsed_ms=None,
+                error="Authorization denied",
+                authorized=False,
+            )
             raise PolicyViolationError(
                 f"Agent '{self.name}' is not permitted to perform '{operation}' on '{resource}'"
             )
@@ -81,15 +96,25 @@ class BaseAgent(abc.ABC):
             self._logger.info(
                 "Agent '%s' completed '%s' in %.1fms", self.name, operation, elapsed_ms
             )
-            await self._log_activity(
-                operation, {"resource": resource, **kwargs}, result, elapsed_ms, error=None
+            await self._record_activity(
+                operation,
+                input_data,
+                result,
+                elapsed_ms=elapsed_ms,
+                error=None,
+                authorized=True,
             )
             return result
         except Exception as exc:
             elapsed_ms = (time.monotonic() - start) * 1000
             self._logger.error("Agent '%s' failed '%s': %s", self.name, operation, exc)
-            await self._log_activity(
-                operation, {"resource": resource, **kwargs}, {}, elapsed_ms, error=str(exc)
+            await self._record_activity(
+                operation,
+                input_data,
+                {},
+                elapsed_ms=elapsed_ms,
+                error=str(exc),
+                authorized=True,
             )
             raise
 
@@ -114,10 +139,11 @@ class BaseAgent(abc.ABC):
         action: str,
         input_data: dict,
         output_data: Any,
-        elapsed_ms: float,
+        elapsed_ms: Optional[float],
         error: Optional[str],
+        authorized: bool,
     ) -> None:
-        """Add an activity record to the current database transaction."""
+        """Add an activity record; the caller owns committing the transaction."""
         if self.db is None:
             return
 
@@ -128,12 +154,28 @@ class BaseAgent(abc.ABC):
             action=action,
             input_data=input_data,
             output_data=output_data if isinstance(output_data, dict) else {"result": output_data},
-            authorized=True,
+            authorized=authorized,
             execution_time_ms=elapsed_ms,
             error=error,
         )
         self.db.add(record)
-        await self.db.flush()
+
+    async def _record_activity(
+        self,
+        action: str,
+        input_data: dict,
+        output_data: Any,
+        elapsed_ms: Optional[float],
+        error: Optional[str],
+        authorized: bool,
+    ) -> None:
+        """Keep logging errors from changing an agent's authorization or result."""
+        try:
+            await self._log_activity(
+                action, input_data, output_data, elapsed_ms, error, authorized
+            )
+        except Exception:
+            self._logger.exception("Could not record activity for '%s'", action)
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} id={self.agent_id!r} name={self.name!r}>"
