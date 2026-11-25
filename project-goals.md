@@ -104,6 +104,15 @@ authorization decision.
 
 ## Changelog
 
+### 2026-11-25 — BaseAgent Iteration 1
+
+**What was done:**
+- Made the shared `_execute()` contract explicit for operation and resource context.
+- Kept authorization fail-closed and convert governance errors into policy denials.
+- Fixed `SecurityScanAgent` initialization so it calls `BaseAgent.__init__()`.
+
+**Remaining:** Activity-log transaction behavior and authorization-decision logging are for iteration 2.
+
 ### 2026-11-23 — Updated Project Goal and Research Focus
 
 **What was done:**

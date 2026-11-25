@@ -3,8 +3,8 @@ Abstract base class for all Praxion agents.
 
 Every agent (discovery, security, governance, remediation, anomaly) inherits
 from BaseAgent, gaining:
-  - structured logging via AgentActivityLogger
-  - automatic OPA authorization check before running
+  - a shared asynchronous execution path
+  - an authorization check before execution
   - run-time metadata (name, role, agent_id)
 """
 from __future__ import annotations
@@ -12,8 +12,6 @@ import abc
 import logging
 import time
 from typing import Any, Optional
-
-logger = logging.getLogger(__name__)
 
 
 class BaseAgent(abc.ABC):
@@ -57,9 +55,19 @@ class BaseAgent(abc.ABC):
             **kwargs:  Passed through to _execute()
         """
         # 1. Authorization gate
-        allowed = await self._check_authorization(operation, resource)
+        try:
+            allowed = await self._check_authorization(operation, resource)
+        except Exception as exc:
+            from app.core.exceptions import PolicyViolationError
+
+            self._logger.exception("Authorization check failed for '%s'", operation)
+            raise PolicyViolationError(
+                f"Could not authorize '{operation}' for agent '{self.name}'"
+            ) from exc
+
         if not allowed:
             from app.core.exceptions import PolicyViolationError
+
             raise PolicyViolationError(
                 f"Agent '{self.name}' is not permitted to perform '{operation}' on '{resource}'"
             )
