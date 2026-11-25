@@ -21,14 +21,22 @@ class SecurityScanAgent(BaseAgent):
     agent_role = "security"
     TERRAFORM_DIR = Path("infrastructure/terraform/simulated")
 
-    def __init__(self, agent_id: str = "agent-security-001", name: str = "security-agent", db_session=None, governance_agent=None):
-        super().__init__(agent_id=agent_id, name=name, db_session=db_session, governance_agent=governance_agent)
+    def __init__(
+        self,
+        agent_id: str = "agent-security-001",
+        name: str = "security-agent",
+        db_session=None,
+        governance_agent=None,
+    ):
+        super().__init__(
+            agent_id=agent_id,
+            name=name,
+            db_session=db_session,
+            governance_agent=governance_agent,
+        )
 
-    async def _execute(self, **kwargs) -> list[dict]:
+    async def _execute(self, operation: str, resource: str, **kwargs) -> list[dict]:
         return await self.scan_all()
-
-    def __init__(self, db_session=None):
-        self.db = db_session
 
     async def scan_all(self) -> list[dict]:
         """Run all scanners and return unified findings list."""

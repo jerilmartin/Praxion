@@ -27,7 +27,7 @@ class InfrastructureDiscoveryAgent(BaseAgent):
     ):
         super().__init__(agent_id=agent_id, name=name, db_session=db_session, governance_agent=governance_agent)
 
-    async def _execute(self, **kwargs) -> Any:
+    async def _execute(self, operation: str, resource: str, **kwargs) -> Any:
         return await self.discover()
 
     async def discover(self) -> list[dict[str, Any]]:
